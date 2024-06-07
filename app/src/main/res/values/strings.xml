@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Tugas Recycler View</string>
+    <string name="title">Judul</string>
+    <string name="subtitle">Deskripsi</string>
+</resources>
