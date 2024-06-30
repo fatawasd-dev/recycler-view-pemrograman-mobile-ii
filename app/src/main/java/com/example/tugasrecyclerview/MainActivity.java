@@ -1,42 +1,102 @@
 package com.example.tugasrecyclerview;
 
-import android.os.Bundle;
-
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import android.app.ProgressDialog;
+import android.content.Intent;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 import java.util.ArrayList;
 import java.util.List;
+
 
 public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private AdapterList myAdapter;
     private List<ItemList> itemList;
+    private FloatingActionButton floatingActionButton;
+    private FirebaseFirestore db;
+    private ProgressDialog progressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
+
+        FirebaseApp.initializeApp(this);
+        db = FirebaseFirestore.getInstance();
+
         recyclerView = findViewById(R.id.recycler_view);
+        floatingActionButton = findViewById(R.id.floatAddNews);
+        progressDialog = new ProgressDialog(MainActivity.this);
+        progressDialog.setTitle("Loading...");
+
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager((this)));
 
         itemList = new ArrayList<>();
-        itemList.add(new ItemList("Idul Adha 2024", "1 Dzulhijjah jatuh pada 8 Juni", "https://akcdn.detik.net.id/community/media/visual/2023/04/14/ilustrasi-pemantauan-hilal.jpeg?w=700&q=90"));
-        itemList.add(new ItemList("Puasa Sunnah Dzulhijjah", "Niat Puasa 1-9 Zulhijah 2024, Tarwiyah dan Arafah", "https://media.kompas.tv/library/image/content_article/article_img/20210125114949.jpg"));
-        itemList.add(new ItemList("Listrik Sumatra Padam", "Setelah Listrik Sumatera Padam, PLN akan Tambah Jaringan Transmisi", "https://statik.tempo.co/data/2024/06/06/id_1308215/1308215_720.jpg"));
-
         myAdapter = new AdapterList(itemList);
-        recyclerView.setAdapter((RecyclerView.Adapter) myAdapter);
+        recyclerView.setAdapter(myAdapter);
 //        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
 //            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
 //            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
 //            return insets;
 //        });
+
+        floatingActionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent toAddPage = new Intent(MainActivity.this, NewsAdd.class);
+                startActivity(toAddPage);
+            }
+        });
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        getData();
+    }
+
+    private void getData() {
+        progressDialog.show();
+        db.collection("news")
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            itemList.clear();
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                ItemList item = new ItemList(
+                                        document.getString("title"),
+                                        document.getString("desc"),
+                                        document.getString("imageUrl")
+                                );
+
+                                item.setId(document.getId());
+                                itemList.add(item);
+                                Log.d("data", document.getId() + " => " + document.getData());
+                            }
+                            myAdapter.notifyDataSetChanged();
+                        } else {
+                            Log.w("data", "Error getting documents", task.getException());
+                        }
+
+                        progressDialog.dismiss();
+                    }
+                });
     }
 }
