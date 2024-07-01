@@ -13,6 +13,11 @@ import java.util.List;
 
 public class AdapterList extends RecyclerView.Adapter<AdapterList.ViewHolder>{
     private List<ItemList> itemList;
+    private OnItemClickListener listener;
+
+    public interface OnItemClickListener {
+        void onItemClick(ItemList item);
+    }
 
     public AdapterList(List<ItemList> itemList) {
         this.itemList = itemList;
@@ -32,6 +37,15 @@ public class AdapterList extends RecyclerView.Adapter<AdapterList.ViewHolder>{
         holder.judul.setText(item.getJudul());
         holder.subJudul.setText(item.getSubJudul());
         Glide.with(holder.imageView.getContext()).load(item.getImageUrl()).into(holder.imageView);
+
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (listener != null) {
+                    listener.onItemClick(item);
+                }
+            }
+        });
     }
 
     @Override
@@ -49,4 +63,9 @@ public class AdapterList extends RecyclerView.Adapter<AdapterList.ViewHolder>{
             subJudul = itemView.findViewById(R.id.sub_title);
         }
     }
+
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.listener = listener;
+    }
+
 }

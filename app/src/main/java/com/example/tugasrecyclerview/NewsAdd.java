@@ -5,17 +5,18 @@ import android.os.Bundle;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
+
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
+
+import com.bumptech.glide.Glide;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -25,6 +26,7 @@ import java.util.Map;
 
 public class NewsAdd extends AppCompatActivity {
 
+    String id = "", judul, deskripsi, image;
     private static final int PICK_IMAGE_REQUEST = 1;
     private EditText title, desc;
     private ImageView imageView;
@@ -71,9 +73,26 @@ public class NewsAdd extends AppCompatActivity {
                 }
 
                 progressDialog.show();
-                uploadImageToStorage(newsTitle, newsDesc);
+
+                if (imageUri != null) {
+                    uploadImageToStorage(newsTitle, newsDesc);
+                } else {
+                    saveData(newsTitle, newsDesc, image);
+                }
             }
         });
+
+        Intent updateOption = getIntent();
+        if (updateOption != null) {
+            id = updateOption.getStringExtra("id");
+            judul = updateOption.getStringExtra("title");
+            deskripsi = updateOption.getStringExtra("desc");
+            image = updateOption.getStringExtra("imageUrl");
+
+            title.setText(judul);
+            desc.setText(deskripsi);
+            Glide.with(this).load(image).into(imageView);
+        }
     }
 
     private void openFileChooser() {
@@ -98,7 +117,7 @@ public class NewsAdd extends AppCompatActivity {
             storageRef.putFile(imageUri)
                     .addOnSuccessListener(taskSnapshot -> storageRef.getDownloadUrl().addOnSuccessListener(uri -> {
                         String imageUrl = uri.toString();
-                        saveDate(newsTitle, newsDesc, imageUrl);
+                        saveData(newsTitle, newsDesc, imageUrl);
                     }))
                     .addOnFailureListener(e -> {
                         progressDialog.dismiss();
@@ -107,25 +126,41 @@ public class NewsAdd extends AppCompatActivity {
         }
     }
 
-    private void saveDate(String newsTitle, String newsDesc, String imageUrl) {
+    private void saveData(String newsTitle, String newsDesc, String imageUrl) {
         Map<String, Object> news = new HashMap<>();
         news.put("title", newsTitle);
         news.put("desc", newsDesc);
         news.put("imageUrl", imageUrl);
 
-        dbNews.collection("news")
-                .add(news)
-                .addOnSuccessListener(documentReference -> {
-                    progressDialog.dismiss();
-                    Toast.makeText(NewsAdd.this, "News added successfully", Toast.LENGTH_SHORT).show();
-                    title.setText("");
-                    desc.setText("");
-                    imageView.setImageResource(0);
-                })
-                .addOnFailureListener(e -> {
-                    progressDialog.dismiss();
-                    Toast.makeText(NewsAdd.this, "Error adding news: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    Log.w("NewsAdd", "Error adding document", e);
-                });
+        if (id != null) {
+            dbNews.collection("news").document(id)
+                    .update(news)
+                    .addOnSuccessListener(aVoid -> {
+                        progressDialog.dismiss();
+                        Toast.makeText(NewsAdd.this, "News Updated Succesfully", Toast.LENGTH_SHORT).show();
+                        finish();
+                    })
+                    .addOnFailureListener(e -> {
+                        progressDialog.dismiss();
+                        Toast.makeText(NewsAdd.this, "Error updating news: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Log.w("NewsAdd", "Error updating document", e);});
+        } else {
+            dbNews.collection("news")
+                    .add(news)
+                    .addOnSuccessListener(documentReference -> {
+                        progressDialog.dismiss();
+                        Toast.makeText(NewsAdd.this, "News added successfully", Toast.LENGTH_SHORT).show();
+                        title.setText("");
+                        desc.setText("");
+                        imageView.setImageResource(0);
+                        finish();
+                    })
+                    .addOnFailureListener(e -> {
+                        progressDialog.dismiss();
+                        Toast.makeText(NewsAdd.this, "Error adding news: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Log.w("NewsAdd", "Error adding document", e);
+                    });
+        }
+
     }
 }

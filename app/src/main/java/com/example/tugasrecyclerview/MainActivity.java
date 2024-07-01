@@ -62,6 +62,17 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(toAddPage);
             }
         });
+
+        myAdapter.setOnItemClickListener(new AdapterList.OnItemClickListener() {
+            @Override
+            public void onItemClick(ItemList item) {
+                Intent intent = new Intent(MainActivity.this, NewsDetail.class);
+                intent.putExtra("title", item.getJudul());
+                intent.putExtra("desc", item.getSubJudul());
+                intent.putExtra("imageUrl", item.getImageUrl());
+                startActivity(intent);
+            }
+        });
     }
 
     @Override
