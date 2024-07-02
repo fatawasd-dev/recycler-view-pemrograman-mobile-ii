@@ -67,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(ItemList item) {
                 Intent intent = new Intent(MainActivity.this, NewsDetail.class);
+                intent.putExtra("id", item.getId());
                 intent.putExtra("title", item.getJudul());
                 intent.putExtra("desc", item.getSubJudul());
                 intent.putExtra("imageUrl", item.getImageUrl());

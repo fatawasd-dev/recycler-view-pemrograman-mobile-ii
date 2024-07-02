@@ -38,10 +38,18 @@ public class NewsDetail extends AppCompatActivity {
         hapus = findViewById(R.id.deleteButton);
 
         db = FirebaseFirestore.getInstance();
+
+
+        Intent intent = getIntent();
+        String id = intent.getStringExtra("id");
+        String title = intent.getStringExtra("title");
+        String subtitle = intent.getStringExtra("desc");
+        String imageUrl = intent.getStringExtra("imageUrl");
+
         hapus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                db.collection("news").document("id")
+                db.collection("news").document(id)
                         .delete()
                         .addOnSuccessListener(aVoid -> {
                             Toast.makeText(NewsDetail.this, "News deleted succesfully", Toast.LENGTH_SHORT).show();
@@ -57,11 +65,6 @@ public class NewsDetail extends AppCompatActivity {
             }
         });
 
-        Intent intent = getIntent();
-        String id = intent.getStringExtra("id");
-        String title = intent.getStringExtra("title");
-        String subtitle = intent.getStringExtra("desc");
-        String imageUrl = intent.getStringExtra("imageUrl");
 
         newsTitle.setText(title);
         newsSubtitle.setText(subtitle);
