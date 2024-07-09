@@ -9,11 +9,17 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
+import android.widget.Toast;
+
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.FirebaseApp;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
@@ -28,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
     private FloatingActionButton floatingActionButton;
     private FirebaseFirestore db;
     private ProgressDialog progressDialog;
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
 
         FirebaseApp.initializeApp(this);
         db = FirebaseFirestore.getInstance();
+        mAuth = FirebaseAuth.getInstance();
 
         recyclerView = findViewById(R.id.recycler_view);
         floatingActionButton = findViewById(R.id.floatAddNews);
@@ -72,6 +80,17 @@ public class MainActivity extends AppCompatActivity {
                 intent.putExtra("desc", item.getSubJudul());
                 intent.putExtra("imageUrl", item.getImageUrl());
                 startActivity(intent);
+            }
+        });
+
+        Button logoutButton = findViewById(R.id.btn_logout);
+        logoutButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mAuth.signOut();
+                Toast.makeText(MainActivity.this, "Logged out successfully", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(MainActivity.this, DefaultActivity.class));
+                finish();
             }
         });
     }
@@ -110,5 +129,25 @@ public class MainActivity extends AppCompatActivity {
                         progressDialog.dismiss();
                     }
                 });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.action_logout) {
+            mAuth.signOut();
+            Toast.makeText(MainActivity.this, "Logged out successfully", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(MainActivity.this, DefaultActivity.class));
+            finish();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }
